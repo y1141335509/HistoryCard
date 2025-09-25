@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HistoryCard - AI-Powered History Learning</title>
+    <meta name="description" content="Discover history through interactive AI-generated cards. Explore ancient civilizations, historical figures, and pivotal events.">
+    <meta name="keywords" content="history learning, historical facts, ancient civilizations, AI education, history cards, interactive learning">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="HistoryCard - AI-Powered History Learning">
+    <meta property="og:description" content="Discover history through interactive AI-generated cards. Explore ancient civilizations, historical figures, and pivotal events.">
+
+    <!-- Twitter -->
+    <meta name="twitter:title" content="HistoryCard - AI-Powered History Learning">
+    <meta name="twitter:description" content="Discover history through interactive AI-generated cards. Explore ancient civilizations, historical figures, and pivotal events.">
+
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react@18/umd/react.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://resource.trickle.so/vendor_lib/unpkg/lucide-static@0.516.0/font/lucide.css" rel="stylesheet">
+
+    <!-- Predefined Tailwind CSS, use it as needed, or update base on your -->
+    <style type="text/tailwindcss">
+    @layer theme {
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --background-color: #ffffff;
+            --surface-color: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+    }
+
+    @layer base {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+        }
+    }
+
+    @layer components {
+        .btn {
+            @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+        }
+        
+        .btn-primary {
+            @apply bg-[var(--primary-color)] text-white hover:opacity-90 focus:ring-[var(--primary-color)];
+        }
+        
+        .btn-secondary {
+            @apply bg-[var(--secondary-color)] text-white hover:opacity-90 focus:ring-[var(--secondary-color)];
+        }
+        
+        .btn-outline {
+            @apply border border-[var(--border-color)] bg-white text-[var(--text-primary)] hover:bg-gray-50;
+        }
+        
+        .card {
+            @apply bg-white rounded-xl p-6 shadow-[var(--shadow-md)] border border-[var(--border-color)];
+        }
+        
+        .card-hover {
+            @apply transition-all duration-200 hover:shadow-[var(--shadow-lg)] hover:-translate-y-1;
+        }
+        
+        .input {
+            @apply w-full px-4 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent;
+        }
+    }
+
+    @layer utilities {
+        .text-gradient {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    }
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel" src="utils/userManager.js"></script>
+    <script type="text/babel" src="components/AuthModal.js"></script>
+    <script type="text/babel" src="components/Header.js"></script>
+    <script type="text/babel" src="components/KnowledgeCard.js"></script>
+    <script type="text/babel" src="components/QuizMode.js"></script>
+    <script type="text/babel" src="components/SearchBar.js"></script>
+    <script type="text/babel" src="components/UserProfile.js"></script>
+    <script type="text/babel" src="components/DailyDigest.js"></script>
+    <script type="text/babel" src="utils/aiAgent.js"></script>
+    <script type="text/babel" src="utils/cardGenerator.js"></script>
+    <script type="text/babel" src="app.js"></script>
+</body>
+</html>
