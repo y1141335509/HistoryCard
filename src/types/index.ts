@@ -49,3 +49,35 @@ export interface HeaderProps {
 }
 
 export type ViewType = 'home' | 'quiz' | 'profile' | 'timeline' | 'vault';
+
+// Timeline related types
+export interface TimelineEvent {
+  id: string;
+  title: string;
+  date: string; // ISO date string
+  year: number;
+  description: string;
+  category: string;
+  importance: 'low' | 'medium' | 'high';
+  location?: string;
+  figures?: string[];
+  relatedCards?: string[];
+  imageUrl?: string;
+}
+
+export interface TimelinePeriod {
+  id: string;
+  name: string;
+  startYear: number;
+  endYear: number;
+  description: string;
+  color: string;
+  events: TimelineEvent[];
+}
+
+export interface TimelineProps {
+  events: TimelineEvent[];
+  periods?: TimelinePeriod[];
+  onEventClick?: (event: TimelineEvent) => void;
+  onPeriodClick?: (period: TimelinePeriod) => void;
+}

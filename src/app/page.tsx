@@ -14,6 +14,8 @@ import {
 } from '@/lib/user-manager';
 
 import Header from '@/components/Header';
+import Timeline from '@/components/Timeline';
+import { sampleTimelineEvents, sampleTimelinePeriods, generateTimelineFromCards } from '@/lib/timeline-data';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState('home');
@@ -176,6 +178,31 @@ export default function Home() {
                 ))
               )}
             </div>
+          </div>
+        )}
+
+        {currentView === 'timeline' && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">历史时间线</h1>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                探索人类历史上的重要事件，从古代文明到现代社会，通过交互式时间线了解历史的发展脉络。
+              </p>
+            </div>
+
+            <Timeline
+              events={[
+                ...sampleTimelineEvents,
+                ...generateTimelineFromCards(cards)
+              ]}
+              periods={sampleTimelinePeriods}
+              onEventClick={(event) => {
+                console.log('点击事件:', event);
+              }}
+              onPeriodClick={(period) => {
+                console.log('点击时期:', period);
+              }}
+            />
           </div>
         )}
 
