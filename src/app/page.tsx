@@ -19,6 +19,7 @@ import AuthModal from '@/components/AuthModal';
 import UserProfile from '@/components/UserProfile';
 import FiguresList from '@/components/FiguresList';
 import FigureTimeline from '@/components/FigureTimeline';
+import TodayInHistory from '@/components/TodayInHistory';
 import { sampleTimelineEvents, sampleTimelinePeriods } from '@/lib/timeline-data';
 import { historicalFigures } from '@/lib/historical-figures';
 
@@ -171,6 +172,9 @@ export default function Home() {
 
             {/* Daily Digest */}
             <DailyDigest cards={cards.slice(0, 3)} />
+
+            {/* Today In History */}
+            <TodayInHistory userBirthYear={new Date().getFullYear() - userAge} />
 
             {/* Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
