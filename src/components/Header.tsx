@@ -8,6 +8,7 @@ import {
   AcademicCapIcon,
   UserCircleIcon,
   CalendarDaysIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 export default function Header({
@@ -23,6 +24,7 @@ export default function Header({
   const navigation = [
     { name: '首页', id: 'home', icon: HomeIcon },
     { name: '历史时间线', id: 'timeline', icon: CalendarDaysIcon },
+    { name: '历史人物', id: 'figures', icon: UserGroupIcon },
     { name: '测验模式', id: 'quiz', icon: AcademicCapIcon },
     { name: '个人资料', id: 'profile', icon: UserCircleIcon },
   ];

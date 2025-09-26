@@ -45,7 +45,7 @@ export class ClaudeHistoryCardGenerator {
   "answer": "清晰简洁的答案",
   "explanation": "额外的精彩细节或背景信息",
   "category": "具体历史类别（古代历史、中世纪、文艺复兴、现代等）",
-  "difficulty": "简单/中等/困难",
+  "difficulty": "Easy/Medium/Hard",
   "estimatedTime": "1-3分钟",
   "historicalPeriod": "具体时间段（如'公元1066年'，'15世纪'）",
   "keyFigures": ["相关历史人物列表"],
@@ -54,13 +54,14 @@ export class ClaudeHistoryCardGenerator {
 }
 
 重点关注：
-- 准确的历史事实和日期
-- 有趣的故事和鲜为人知的细节
-- 事件和人物之间的联系
-- 不同文明和时代
-- 考古发现和证据
+- 准确的历史事实和具体日期（请务必核实准确性）
+- 重要的历史人物、事件的具体背景和意义
+- 历史事件的因果关系和长远影响
+- 不同文明、朝代、时代的特色
+- 考古发现、史料记录和学术共识
+- 避免传说、神话或未经证实的说法
 
-让内容对历史爱好者有吸引力，对学生有教育意义。
+请确保所有信息都基于可靠的历史记录和学术研究。内容既要有教育意义又要引人入胜。
 
 只返回${count}张卡片的有效JSON数组，不要添加其他文本。`;
   }
@@ -112,7 +113,7 @@ export class ClaudeHistoryCardGenerator {
         answer: card.answer || `${topic}在历史上具有重要意义。`,
         explanation: card.explanation || `了解${topic}有助于我们理解历史背景。`,
         category: card.category || this.categorizeHistoryTopic(topic),
-        difficulty: card.difficulty || '中等',
+        difficulty: card.difficulty || 'Medium',
         estimatedTime: card.estimatedTime || '2分钟',
         historicalPeriod: card.historicalPeriod || '未知',
         keyFigures: card.keyFigures || [],
@@ -190,10 +191,10 @@ export class ClaudeHistoryCardGenerator {
       const card: HistoryCard = {
         id: `fallback_history_${Date.now()}_${i}`,
         question: question,
-        answer: `${topic}在塑造人类历史和文明方面发挥了重要作用。`,
-        explanation: `了解${topic}有助于我们学习历史模式、文化发展和人类在时间长河中的进步。`,
+        answer: this.getTopicAnswer(topic, question),
+        explanation: this.getTopicExplanation(topic, question),
         category: category,
-        difficulty: '中等' as const,
+        difficulty: 'Medium' as const,
         estimatedTime: '2分钟',
         historicalPeriod: '各个时期',
         keyFigures: [],
@@ -212,6 +213,81 @@ export class ClaudeHistoryCardGenerator {
     }
 
     return fallbackCards;
+  }
+
+  private getTopicAnswer(topic: string, questionType: string): string {
+    const answerTemplates: Record<string, Record<string, string>> = {
+      '古罗马帝国': {
+        'facts': '古罗马帝国是人类历史上最强大的帝国之一，存续了超过500年，在其鼎盛时期控制了地中海周围的广大地区，包括现今的欧洲、北非和西亚部分地区。',
+        'timeline': '罗马帝国建立于公元前27年，屋大维被元老院授予"奥古斯都"称号，标志着帝国时代开始。帝国在2世纪达到鼎盛，至公元476年西罗马帝国灭亡。',
+        'figures': '奥古斯都是首位皇帝，图拉真将帝国疆域扩展到最大，哈德良建造了著名的哈德良长城，马可·奥勒留是哲学家皇帝，君士坦丁大帝使基督教合法化。',
+        'significance': '罗马帝国在法律、语言、建筑、政治制度等方面为后世欧洲文明奠定了基础，罗马法成为现代法律体系的重要基础。',
+        'impact': '罗马帝国的分裂导致了中世纪欧洲的形成，拉丁语演化成了众多欧洲语言，基督教成为西方文明的主导宗教。',
+        'evidence': '罗马斗兽场、万神庙、图拉真柱、庞贝古城等建筑遗迹，以及众多碑石雕像、文献记录和考古发现为帝国历史提供了丰富证据。'
+      },
+      '汉朝': {
+        'facts': '汉朝是中国历史上最重要的朝代之一，建立了统一的中央集权制度，创立了郡县制，奠定了中华文明的政治和文化基础。',
+        'timeline': '汉朝分为西汉(公元前206年-公元8年)和东汉(公元25年-220年)两个时期，总共延续了400多年。',
+        'figures': '汉高祖刘邦建立汉朝，汉武帝刘彻开疆拓土建立丝绸之路，光武帝刘秀中兴汉朝建立东汉，都是杰出的皇帝。',
+        'significance': '汉朝建立了丝绸之路，促进了东西方文化交流，对世界文明发展产生了深远影响，"汉族"、"汉语"等概念由此而来。',
+        'impact': '汉朝的政治制度、文化传统、儒家思想影响了后续两千多年的中国历史，成为中华文明的核心组成部分。',
+        'evidence': '长城遗迹、兵马俑、汉简、马王堆汉墓、丝绸之路遗迹等为汉朝的辉煌提供了丰富的考古证据。'
+      }
+    };
+
+    const questionTypeMap: Record<string, string> = {
+      '关键历史事实': 'facts',
+      '何时发生': 'timeline',
+      '重要人物': 'figures',
+      '历史意义': 'significance',
+      '影响后来': 'impact',
+      '考古证据': 'evidence'
+    };
+
+    // 从问题中提取类型
+    let answerType = 'facts';
+    for (const [key, type] of Object.entries(questionTypeMap)) {
+      if (questionType.includes(key)) {
+        answerType = type;
+        break;
+      }
+    }
+
+    const topicAnswers = answerTemplates[topic];
+    if (topicAnswers && topicAnswers[answerType]) {
+      return topicAnswers[answerType];
+    }
+
+    // 默认答案
+    const defaultAnswers: Record<string, string> = {
+      'facts': `${topic}是历史上一个重要的文明或事件，对人类发展产生了深远影响。`,
+      'timeline': `${topic}在特定的历史时期发生，有着明确的时间背景和发展脉络。`,
+      'figures': `${topic}涉及众多重要的历史人物，他们推动了历史的发展。`,
+      'significance': `${topic}的历史意义体现在对后世文明和社会发展的重大影响。`,
+      'impact': `${topic}对后来的历史事件产生了连锁反应和深远影响。`,
+      'evidence': `${topic}留下了丰富的考古证据和历史资料供我们研究。`
+    };
+
+    return defaultAnswers[answerType] || defaultAnswers['facts'];
+  }
+
+  private getTopicExplanation(topic: string, questionType: string): string {
+    const explanationMap: Record<string, string> = {
+      '关键历史事实': `了解${topic}的关键事实有助于我们理解其在历史中的重要地位和影响。`,
+      '何时发生': `准确的时间线对于理解${topic}与其他历史事件的关系至关重要。`,
+      '重要人物': `这些关键人物在${topic}的发展过程中发挥了决定性作用。`,
+      '历史意义': `评估${topic}的历史意义有助于我们理解其对今天世界的影响。`,
+      '影响后来': `理解${topic}的长期影响揭示了历史事件之间的因果关系。`,
+      '考古证据': `考古证据为我们提供了关于${topic}的实物证明和细节。`
+    };
+
+    for (const [key, explanation] of Object.entries(explanationMap)) {
+      if (questionType.includes(key)) {
+        return explanation;
+      }
+    }
+
+    return `了解${topic}有助于我们学习历史模式、文化发展和人类在时间长河中的进步。`;
   }
 }
 

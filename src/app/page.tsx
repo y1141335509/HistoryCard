@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { HistoryCard, User } from '@/types';
+import { HistoryCard, User, HistoricalFigure } from '@/types';
 import { generateKnowledgeCards } from '@/lib/claude-api';
 import {
   getCurrentUser,
@@ -14,14 +14,21 @@ import {
 } from '@/lib/user-manager';
 
 import Header from '@/components/Header';
-import Timeline from '@/components/Timeline';
-import { sampleTimelineEvents, sampleTimelinePeriods, generateTimelineFromCards } from '@/lib/timeline-data';
+import VisTimeline from '@/components/VisTimeline';
+import AuthModal from '@/components/AuthModal';
+import UserProfile from '@/components/UserProfile';
+import FiguresList from '@/components/FiguresList';
+import FigureTimeline from '@/components/FigureTimeline';
+import { sampleTimelineEvents, sampleTimelinePeriods } from '@/lib/timeline-data';
+import { historicalFigures } from '@/lib/historical-figures';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState('home');
   const [cards, setCards] = useState<HistoryCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [selectedFigure, setSelectedFigure] = useState<HistoricalFigure | null>(null);
+  const [userAge, setUserAge] = useState<number>(25); // 默认用户年龄，可以从用户资料获取
   const [user, setUser] = useState<User>(() => {
     // 初始化用户状态
     return getCurrentUser() || {
@@ -125,6 +132,15 @@ export default function Home() {
     }
   };
 
+  // 历史人物相关处理函数
+  const handleFigureSelect = (figure: HistoricalFigure) => {
+    setSelectedFigure(figure);
+  };
+
+  const handleBackToFiguresList = () => {
+    setSelectedFigure(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -190,11 +206,8 @@ export default function Home() {
               </p>
             </div>
 
-            <Timeline
-              events={[
-                ...sampleTimelineEvents,
-                ...generateTimelineFromCards(cards)
-              ]}
+            <VisTimeline
+              events={sampleTimelineEvents}
               periods={sampleTimelinePeriods}
               onEventClick={(event) => {
                 console.log('点击事件:', event);
@@ -210,6 +223,43 @@ export default function Home() {
           <div className="text-center py-20">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">测验模式</h2>
             <p className="text-gray-600">敬请期待！测验功能正在开发中。</p>
+          </div>
+        )}
+
+        {currentView === 'figures' && (
+          <div className="space-y-8">
+            {!selectedFigure ? (
+              <FiguresList
+                figures={historicalFigures}
+                onFigureSelect={handleFigureSelect}
+              />
+            ) : (
+              <div className="space-y-6">
+                {/* 返回按钮 */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={handleBackToFiguresList}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    <span>←</span>
+                    <span>返回人物列表</span>
+                  </button>
+
+                  <div className="text-sm text-slate-600">
+                    对比您的年龄：<span className="font-bold text-purple-600">{userAge} 岁</span>
+                  </div>
+                </div>
+
+                {/* 人物时间轴 */}
+                <FigureTimeline
+                  figure={selectedFigure}
+                  userAge={userAge}
+                  onAchievementClick={(achievement) => {
+                    console.log('点击成就:', achievement);
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -405,178 +455,6 @@ function KnowledgeCard({ card, isFavorite, onComplete, onFavorite }: {
         <span className="text-xs text-gray-500">
           {card.estimatedTime}
         </span>
-      </div>
-    </div>
-  );
-}
-
-function UserProfile({ user, favoriteCards }: {
-  user: User;
-  favoriteCards: HistoryCard[];
-}) {
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="bg-white rounded-xl p-8 shadow-sm">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.username}</h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">{user.learnedCards}</div>
-            <div className="text-sm text-gray-500">已学习卡片</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-orange-500">{user.streak}</div>
-            <div className="text-sm text-gray-500">连续学习天数</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-red-500">{user.favorites.length}</div>
-            <div className="text-sm text-gray-500">收藏卡片</div>
-          </div>
-        </div>
-      </div>
-
-      {favoriteCards.length > 0 && (
-        <div className="bg-white rounded-xl p-8 shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">收藏的卡片</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {favoriteCards.map(card => (
-              <div key={card.id} className="border border-gray-200 rounded-lg p-4">
-                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                  {card.category}
-                </span>
-                <h3 className="font-semibold mt-2">{card.question}</h3>
-                <p className="text-sm text-gray-600 mt-2">{card.answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AuthModal({ isOpen, onClose, onLogin, onRegister }: {
-  isOpen: boolean;
-  onClose: () => void;
-  onLogin: (username: string, password: string) => Promise<void>;
-  onRegister: (username: string, email: string, password: string) => Promise<void>;
-}) {
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: ''
-  });
-  const [loading, setLoading] = useState(false);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isLoginMode) {
-        await onLogin(formData.username, formData.password);
-      } else {
-        await onRegister(formData.username, formData.email, formData.password);
-      }
-      onClose();
-    } catch (error: any) {
-      alert(error.message || '操作失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {isLoginMode ? '欢迎回来' : '加入历史卡片'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              用户名
-            </label>
-            <input
-              type="text"
-              value={formData.username}
-              onChange={(e) => setFormData({...formData, username: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          {!isLoginMode && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                邮箱
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              密码
-            </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              minLength={6}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-          >
-            {loading ? '请稍候...' : (isLoginMode ? '登录' : '创建账户')}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            {isLoginMode ? "还没有账户？" : "已有账户？"}
-            <button
-              onClick={() => {
-                setIsLoginMode(!isLoginMode);
-                setFormData({ username: '', email: '', password: '' });
-              }}
-              className="ml-1 text-blue-600 hover:underline font-medium"
-            >
-              {isLoginMode ? '立即注册' : '立即登录'}
-            </button>
-          </p>
-        </div>
-
-        {isLoginMode && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-700">
-              <strong>演示账户：</strong> 使用任意用户名/密码来试用应用
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

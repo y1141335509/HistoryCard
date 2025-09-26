@@ -7,7 +7,9 @@ import { format } from 'date-fns';
 export default function Timeline({ events, periods, onEventClick, onPeriodClick }: TimelineProps) {
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [viewRange, setViewRange] = useState({ start: -3000, end: 2024 });
+  const [viewRange, setViewRange] = useState({ start: -8000, end: 2024 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, scrollLeft: 0 });
   const timelineRef = useRef<HTMLDivElement>(null);
 
   // Sort events by year
@@ -50,6 +52,41 @@ export default function Timeline({ events, periods, onEventClick, onPeriodClick 
     return `公元${year}年`;
   };
 
+  // 鼠标滚轮缩放功能
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    const newZoom = Math.max(0.5, Math.min(5, zoomLevel + delta));
+    setZoomLevel(newZoom);
+  };
+
+  // 拖拽功能
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.pageX,
+      scrollLeft: timelineRef.current?.scrollLeft || 0
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX;
+    const walk = (x - dragStart.x) * 2;
+    if (timelineRef.current) {
+      timelineRef.current.scrollLeft = dragStart.scrollLeft - walk;
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
   return (
     <div className="w-full space-y-6">
       {/* Timeline Controls */}
@@ -85,8 +122,9 @@ export default function Timeline({ events, periods, onEventClick, onPeriodClick 
             }}
             className="text-sm border border-gray-300 rounded px-2 py-1"
           >
-            <option value="-3000-2024">全部历史</option>
-            <option value="-3000-0">古代史</option>
+            <option value="-8000-2024">全部历史</option>
+            <option value="-8000-0">史前和古代</option>
+            <option value="-3000-0">古代文明</option>
             <option value="0-500">早期古典时期</option>
             <option value="500-1500">中世纪</option>
             <option value="1500-1800">近世</option>
@@ -119,8 +157,17 @@ export default function Timeline({ events, periods, onEventClick, onPeriodClick 
       <div className="bg-white rounded-lg p-6 shadow-sm">
         <div
           ref={timelineRef}
-          className="relative h-96 overflow-x-auto overflow-y-hidden"
-          style={{ transform: `scaleX(${zoomLevel})`, transformOrigin: 'left center' }}
+          className="relative h-96 overflow-x-auto overflow-y-hidden cursor-grab active:cursor-grabbing select-none"
+          style={{
+            transform: `scaleX(${zoomLevel})`,
+            transformOrigin: 'left center',
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
         >
           {/* Timeline Base Line */}
           <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-300 transform -translate-y-1/2"></div>
@@ -130,23 +177,34 @@ export default function Timeline({ events, periods, onEventClick, onPeriodClick 
             {(() => {
               const { start, end } = viewRange;
               const totalRange = end - start;
-              const yearStep = Math.max(1, Math.floor(totalRange / 20));
-              const markers = [];
+              let yearStep;
 
-              for (let year = Math.ceil(start / yearStep) * yearStep; year <= end; year += yearStep) {
+              // 动态调整年份步长
+              if (totalRange <= 100) yearStep = 10;
+              else if (totalRange <= 500) yearStep = 50;
+              else if (totalRange <= 2000) yearStep = 200;
+              else if (totalRange <= 5000) yearStep = 500;
+              else yearStep = 1000;
+
+              const markers = [];
+              const startMarker = Math.ceil(start / yearStep) * yearStep;
+
+              for (let year = startMarker; year <= end; year += yearStep) {
                 const position = getEventPosition(year);
-                markers.push(
-                  <div
-                    key={year}
-                    className="absolute flex flex-col items-center"
-                    style={{ left: `${position}%`, top: '75%' }}
-                  >
-                    <div className="w-px h-4 bg-gray-400"></div>
-                    <span className="text-xs text-gray-500 mt-1 whitespace-nowrap">
-                      {formatYear(year)}
-                    </span>
-                  </div>
-                );
+                if (position >= 0 && position <= 100) {
+                  markers.push(
+                    <div
+                      key={year}
+                      className="absolute flex flex-col items-center"
+                      style={{ left: `${position}%`, top: '75%' }}
+                    >
+                      <div className="w-px h-4 bg-gray-400"></div>
+                      <span className="text-xs text-gray-500 mt-1 whitespace-nowrap">
+                        {formatYear(year)}
+                      </span>
+                    </div>
+                  );
+                }
               }
               return markers;
             })()}
@@ -174,7 +232,7 @@ export default function Timeline({ events, periods, onEventClick, onPeriodClick 
 
                 {/* Event Dot */}
                 <div
-                  className={`${getEventPosition(event.year)} ${getImportanceColor(event.importance)}
+                  className={`${getImportanceSize(event.importance)} ${getImportanceColor(event.importance)}
                            rounded-full border-2 border-white shadow-sm group-hover:scale-125
                            transition-transform cursor-pointer`}
                   title={event.title}
@@ -182,7 +240,7 @@ export default function Timeline({ events, periods, onEventClick, onPeriodClick 
 
                 {/* Event Label */}
                 <div className="mt-2 bg-white border border-gray-200 rounded px-2 py-1 shadow-sm
-                              opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none
+                              group-hover:bg-blue-50 transition-all pointer-events-none
                               min-w-max max-w-48">
                   <div className="text-xs font-medium text-gray-900">{event.title}</div>
                   <div className="text-xs text-gray-500">{formatYear(event.year)}</div>
@@ -285,6 +343,20 @@ export default function Timeline({ events, periods, onEventClick, onPeriodClick 
             <span className="text-sm font-medium text-gray-500 block mb-2">描述:</span>
             <p className="text-sm text-gray-700 leading-relaxed">{selectedEvent.description}</p>
           </div>
+
+          {selectedEvent.sources && selectedEvent.sources.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <span className="text-sm font-medium text-gray-500 block mb-2">📚 参考文献:</span>
+              <ul className="space-y-1">
+                {selectedEvent.sources.map((source, index) => (
+                  <li key={index} className="text-xs text-gray-600 pl-4 relative">
+                    <span className="absolute left-0 top-0">{index + 1}.</span>
+                    {source}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>
